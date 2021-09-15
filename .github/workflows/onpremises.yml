@@ -2,7 +2,8 @@ name: on-premises build
 
 on:
   push:
-    branches: main
+    branches:
+      - main
 
 env:
   NUGET_VERSION: "5.3.1" # set this to the dot net version to use
@@ -37,3 +38,52 @@ jobs:
         with:
           name: TailwindTradersBundle
           path: .\Source\Website\
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: TailwindTradersSQL
+          path: .\Source\SQLScripts\CreateTablesAndPopulate.sql
+
+  publish:
+    name: Publish TailwindTradersBundle
+    needs: build
+    if: github.event_name != 'pull_request'
+    env:
+      ARTIFACT_DIR: ./release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+      - name: download artifacts - TailwindTradersBundle
+        uses: actions/download-artifact@master
+        with:
+          name: TailwindTradersBundle
+          path: ${{ env.ARTIFACT_DIR }}
+      - name: download artifacts - TailwindTradersSQL
+        uses: actions/download-artifact@master
+        with:
+          name: TailwindTradersSQL
+          path: ${{ env.ARTIFACT_DIR }}
+      - name: publish files to github
+        if: startswith(github.ref, 'refs/tags/v')
+        run: |
+          echo "installing github-release-cli..."
+          sudo npm install --silent --no-progress -g @babel/runtime
+          sudo npm install --silent --no-progress -g github-release-cli
+          # Get the list of files
+          RELEASE_ARTIFACT=(${ARTIFACT_DIR}/*)
+          # Parse repository to get owner and repo names
+          OWNER_NAME="${GITHUB_REPOSITORY%%/*}"
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
+          REL_VERSION="0.2.0"
+          RELEASE_BODY="This is the release candidate ${REL_VERSION}"
+          export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          echo "Uploading files to GitHub Release"
+          github-release upload \
+            --owner $OWNER_NAME --repo $REPO_NAME \
+            --tag "v${REL_VERSION}" \
+            --release-name "TailwindTradersBundle v${REL_VERSION}" \
+            --body "${RELEASE_BODY}" \
+            --prerelease true \
+            ${RELEASE_ARTIFACT[*]}
