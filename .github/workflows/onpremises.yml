@@ -1,0 +1,39 @@
+name: on-premises build
+
+on:
+  push:
+    branches: main
+
+env:
+  NUGET_VERSION: "5.3.1" # set this to the dot net version to use
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1
+
+      - name: Install Nuget
+        uses: nuget/setup-nuget@v1
+        with:
+          nuget-version: ${{ env.NUGET_VERSION}}
+
+      - name: Navigate to Workspace
+        run: cd $GITHUB_WORKSPACE
+
+      - name: Restore Packages
+        run: nuget restore .\Source\TailwindTraders.Rewards.Website.sln
+
+      - name: Build Solution
+        run: |
+          msbuild.exe .\Source\TailwindTraders.Rewards.Website.sln
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: TailwindTradersBundle
+          path: .\Source\Website\
