@@ -35,11 +35,15 @@ jobs:
         run: |
           msbuild.exe .\Source\TailwindTraders.Rewards.Website.sln
 
+      - name: Zip Bundle
+        run: |
+          Compress-Archive -Path .\Source\Website\ -DestinationPath .\Source\TailwindTradersBundle.zip
+
       - name: Upload artifact
         uses: actions/upload-artifact@v1.0.0
         with:
           name: TailwindTradersBundle
-          path: .\Source\Website\
+          path: .\Source\TailwindTradersBundle.zip
 
   publish:
     name: Publish TailwindTradersBundle
