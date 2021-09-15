@@ -71,7 +71,7 @@ jobs:
           # Parse repository to get owner and repo names
           OWNER_NAME="${GITHUB_REPOSITORY%%/*}"
           REPO_NAME="${GITHUB_REPOSITORY#*/}"
-          REL_VERSION="0.2.0"
+          REL_VERSION="0.1.0"
           RELEASE_BODY="This is the release candidate ${REL_VERSION}"
           export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
           echo "Uploading files to GitHub Release"
