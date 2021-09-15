@@ -39,12 +39,6 @@ jobs:
           name: TailwindTradersBundle
           path: .\Source\Website\
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v1.0.0
-        with:
-          name: TailwindTradersSQL
-          path: .\Source\SQLScripts\CreateTablesAndPopulate.sql
-
   publish:
     name: Publish TailwindTradersBundle
     needs: build
@@ -59,11 +53,6 @@ jobs:
         uses: actions/download-artifact@master
         with:
           name: TailwindTradersBundle
-          path: ${{ env.ARTIFACT_DIR }}
-      - name: download artifacts - TailwindTradersSQL
-        uses: actions/download-artifact@master
-        with:
-          name: TailwindTradersSQL
           path: ${{ env.ARTIFACT_DIR }}
       - name: publish files to github
         if: startswith(github.ref, 'refs/tags/v')
