@@ -6,7 +6,7 @@ Invoke-WebRequest -Uri $get_edge_location -OutFile get-edge.ps1 -UseBasicParsing
 .\get-edge.ps1 Stable .
 
 # Install Edge
-.\MicrosoftEdgeEnterpriseX64.msi /q
+Start-Process powershell.exe -ArgumentList '.\MicrosoftEdgeEnterpriseX64.msi', '/q' -Wait
 
 # Cleanup Edge msi
 rm .\MicrosoftEdgeEnterpriseX64.msi
@@ -31,7 +31,7 @@ $sql_express_location="https://go.microsoft.com/fwlink/?linkid=866658"
 Invoke-WebRequest -Uri $sql_express_location -OutFile sql_express_setup.exe -UseBasicParsing 
 
 # Install SQL Express
-.\sql_express_setup.exe /Q /IACCEPTSQLSERVERLICENSETERMS /ACTION="Install" /ENU /INSTALLPATH="C:\Program Files\Microsoft SQL Server"
+. .\sql_express_setup.exe /Q /IACCEPTSQLSERVERLICENSETERMS /ACTION="Install" /ENU /INSTALLPATH="C:\Program Files\Microsoft SQL Server" | Write-Output
 
 # Cleanup SQL Express
 rm .\sql_express_setup.exe
@@ -59,8 +59,16 @@ Expand-Archive -Path .\TailwindTradersBundle.zip -DestinationPath C:\inetpub\www
 # Cleanup Zip
 rm .\TailwindTradersBundle.zip
 
-SCHTASKS.EXE /DELETE /F /TN "First Logon"
+# Removing the LogonScript Scheduled Task so it won't run on next reboot
+Unregister-ScheduledTask -TaskName "SetupSQLAndAppLogonScript" -Confirm:$false
 }
 
 echo $run_on_logon.ToString() > C:\run_on_logon.ps1
-SCHTASKS.EXE /CREATE /F /SC ONLOGON /TN "First Logon" /RL HIGHEST /TR "powershell.exe -ExecutionPolicy Bypass -File C:\run_on_logon.ps1"
+
+# Creating scheduled task for MonitorWorkbookLogonScript.ps1
+$trigger = New-ScheduledTaskTrigger -AtLogOn
+$action = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "C:\run_on_logon.ps1"
+Register-ScheduledTask -TaskName "SetupSQLAndAppLogonScript" -Trigger $Trigger -User "as-is-user" -Action $Action -RunLevel "Highest" -Force
+
+# Disabling Windows Server Manager Scheduled Task
+Get-ScheduledTask -TaskName ServerManager | Disable-ScheduledTask
