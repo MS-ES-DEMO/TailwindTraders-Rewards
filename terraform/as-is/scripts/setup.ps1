@@ -25,6 +25,8 @@ Install-WindowsFeature Web-Scripting-Tools
 Install-WindowsFeature Web-Mgmt-Service
 Install-WindowsFeature WinRM-IIS-Ext
 
+Disable-WindowsOptionalFeature -FeatureName Internet-Explorer-Optional-amd64 -Online -NoRestart
+
 # Get webdeploy
 Invoke-WebRequest -Uri "https://aka.ms/webdeploy3.6" -OutFile webdeploy.msi -UseBasicParsing
 
@@ -73,6 +75,17 @@ Expand-Archive -Path .\TailwindTradersBundle.zip -DestinationPath C:\inetpub\www
 
 # Cleanup Zip
 rm .\TailwindTradersBundle.zip
+
+# Get AzureMigrateInstaller
+Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/?linkid=2140334" -OutFile AzureMigrateInstaller.zip -UseBasicParsing
+Expand-Archive -Path .\AzureMigrateInstaller.zip -DestinationPath C:\AzureMigrateInstaller\
+
+# Install AzureMigrateInstaller
+C:\AzureMigrateInstaller\AzureMigrateInstaller.ps1 -Scenario Physical -Cloud Public -PrivateEndpoint:$false
+
+# Cleanup AzureMigrateInstaller
+rm .\AzureMigrateInstaller.zip
+Remove-Item -path C:\AzureMigrateInstaller -recurse
 
 # Removing the LogonScript Scheduled Task so it won't run on next reboot
 Unregister-ScheduledTask -TaskName "SetupSQLAndAppLogonScript" -Confirm:$false
